@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ahoy! Marine SRS & Clicker</title>
+  <style>
+    :root {
+      --primary-red: #8b0000;
+      --accent-crimson: #c41e3a;
+      --deep-navy: #0a1128;
+      --gold-accent: #d4af37;
+      --gold-hover: #f3e5ab;
+      --card-bg: rgba(15, 23, 42, 0.88);
+      --text-light: #f8fafc;
+      --border-gold: 2px solid #d4af37;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--deep-navy);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: var(--text-light);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 20px;
+      padding-bottom: 220px; /* Leave room for bottom clicker */
+      overflow-x: hidden;
+    }
+
+    /* Side Toggle Buttons */
+    .sidebar-toggle-btn {
+      position: fixed;
+      top: 20px;
+      left: 0;
+      z-index: 1000;
+      background: var(--accent-crimson);
+      color: var(--gold-accent);
+      border: var(--border-gold);
+      border-left: none;
+      padding: 10px 14px;
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .sidebar-toggle-btn:hover {
+      background: #a0182e;
+      transform: translateX(4px);
+    }
+
+    .bg-toggle-btn {
+      position: fixed;
+      top: 20px;
+      right: 0;
+      z-index: 1000;
+      background: var(--accent-crimson);
+      color: var(--gold-accent);
+      border: var(--border-gold);
+      border-right: none;
+      padding: 10px 14px;
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: -2px 2px 10px rgba(0,0,0,0.5);
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .bg-toggle-btn:hover {
+      background: #a0182e;
+      transform: translateX(-4px);
+    }
+
+    /* Sidebar Panel (Mistakes) */
+    .sidebar-panel {
+      position: fixed;
+      top: 0;
+      left: -350px;
+      width: 320px;
+      height: 100%;
+      background: rgba(10, 17, 40, 0.95);
+      border-right: var(--border-gold);
+      box-shadow: 5px 0 15px rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      z-index: 1001;
+      transition: left 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .sidebar-panel.open {
+      left: 0;
+    }
+
+    /* Compact BG & Clicker Image Popover Panel */
+    .bg-popover {
+      position: fixed;
+      top: 65px;
+      right: -320px;
+      width: 290px;
+      background: rgba(10, 17, 40, 0.95);
+      border: var(--border-gold);
+      border-right: none;
+      border-top-left-radius: 12px;
+      border-bottom-left-radius: 12px;
+      box-shadow: -5px 5px 15px rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      z-index: 1001;
+      padding: 16px;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+    }
+
+    .bg-popover.open {
+      right: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--gold-accent);
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+
+    .panel-header h2 {
+      font-size: 1.1rem;
+      color: var(--gold-accent);
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+
+    .close-btn:hover {
+      color: #fff;
+    }
+
+    .practice-mistakes-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--gold-accent);
+      color: var(--deep-navy);
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      transition: background 0.2s;
+    }
+
+    .practice-mistakes-btn:hover {
+      background: var(--gold-hover);
+    }
+
+    .mistakes-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-right: 4px;
+    }
+
+    .mistake-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mistake-item-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 220px;
+    }
+
+    .mistake-jp {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #f8fafc;
+    }
+
+    .mistake-en {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    .mistake-badge {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    /* App Container */
+    .app-container {
+      width: 100%;
+      max-width: 650px;
+      background: var(--card-bg);
+      border: var(--border-gold);
+      border-radius: 16px;
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.3);
+      backdrop-filter: blur(8px);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      position: relative;
+      margin-top: 10px;
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 2px dashed var(--gold-accent);
+      padding-bottom: 12px;
+    }
+
+    .header h1 {
+      font-size: 1.6rem;
+      color: var(--gold-accent);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+
+    .sub-header {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      margin-top: 4px;
+    }
+
+    .mode-selector {
+      display: flex;
+      gap: 10px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(212, 175, 55, 0.4);
+    }
+
+    .mode-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .mode-btn.active {
+      background: var(--accent-crimson);
+      color: white;
+      box-shadow: 0 2px 8px rgba(196, 30, 58, 0.5);
+    }
+
+    .prompt-box {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--gold-accent);
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      position: relative;
+    }
+
+    .prompt-title {
+      font-size: 0.75rem;
+      color: var(--gold-accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .prompt-text {
+      font-size: 1.6rem;
+      font-weight: bold;
+      word-break: break-word;
+    }
+
+    .card-meta {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      color: #fb7185;
+      font-weight: bold;
+    }
+
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 2px solid var(--gold-accent);
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      text-align: center;
+    }
+
+    input[type="text"]:focus {
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
+    }
+
+    .submit-btn {
+      padding: 10px;
+      background: var(--accent-crimson);
+      color: white;
+      border: 1px solid var(--gold-accent);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: background 0.2s;
+    }
+
+    .submit-btn:hover {
+      background: #a0182e;
+    }
+
+    .feedback-box {
+      padding: 14px;
+      border-radius: 8px;
+      text-align: center;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .feedback-box.correct {
+      background: rgba(34, 197, 94, 0.2);
+      border: 1px solid #22c55e;
+      color: #4ade80;
+    }
+
+    .feedback-box.incorrect {
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+    }
+
+    .next-btn {
+      padding: 8px;
+      background: var(--gold-accent);
+      color: var(--deep-navy);
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+
+    .next-btn:hover {
+      background: var(--gold-hover);
+    }
+
+    .bg-input {
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid var(--gold-accent);
+      background: rgba(0, 0, 0, 0.5);
+      color: #fff;
+      font-size: 0.8rem;
+    }
+
+    .file-label {
+      background: rgba(212, 175, 55, 0.2);
+      border: 1px solid var(--gold-accent);
+      color: var(--gold-accent);
+      padding: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-align: center;
+      display: block;
+    }
+
+    .stats-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    /* Anti-Cheat Modal Popup */
+    .cheat-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .cheat-content {
+      background: var(--card-bg);
+      border: 3px solid #ef4444;
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      max-width: 380px;
+      box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .cheat-img {
+      width: 240px;
+      max-height: 280px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 2px solid var(--gold-accent);
+    }
+
+    .cheat-text-jp {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #ef4444;
+    }
+
+    .cheat-text-sub {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+
+    .cheat-close-btn {
+      padding: 8px 16px;
+      background: #ef4444;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    /* Bottom Marine Clicker Bar - Full Width Expanded Store */
+    .clicker-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      min-height: 160px;
+      max-height: 220px;
+      background: rgba(10, 17, 40, 0.95);
+      border-top: var(--border-gold);
+      box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      z-index: 900;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 12px 24px;
+      gap: 25px;
+    }
+
+    .clicker-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      flex-shrink: 0;
+    }
+
+    .marine-click-target {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid var(--gold-accent);
+      object-fit: cover;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+      transition: transform 0.1s ease, box-shadow 0.1s;
+      user-select: none;
+      background: #2a0813;
+    }
+
+    .marine-click-target:active {
+      transform: scale(0.92);
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.8);
+    }
+
+    .clicker-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 150px;
+      flex-shrink: 0;
+    }
+
+    .mari-balance {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--gold-accent);
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    .mari-stats {
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+
+    /* Store Container utilizes full remaining screen width */
+    .store-container {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .store-header-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--gold-accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Flexible wrapping layout that expands into empty horizontal space */
+    .clicker-shop {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      overflow-y: auto;
+      max-height: 140px;
+      padding-right: 8px;
+      width: 100%;
+    }
+
+    .shop-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 4px;
+      flex: 1 1 160px; /* Expands to fill available row space */
+      max-width: 220px;
+      min-width: 150px;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .shop-item:hover {
+      background: rgba(212, 175, 55, 0.15);
+      border-color: var(--gold-accent);
+    }
+
+    .shop-item.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .shop-title {
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #f8fafc;
+    }
+
+    .shop-effect {
+      font-size: 0.7rem;
+      color: #4ade80;
+    }
+
+    .shop-cost {
+      font-size: 0.75rem;
+      font-weight: bold;
+      color: var(--gold-accent);
+    }
+
+    /* Floating +Mari text animation */
+    .floating-text {
+      position: absolute;
+      color: var(--gold-hover);
+      font-weight: bold;
+      font-size: 1.2rem;
+      pointer-events: none;
+      animation: floatUp 0.8s ease-out forwards;
+      text-shadow: 1px 1px 3px #000;
+    }
+
+    @keyframes floatUp {
+      0% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-40px);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Anti-Cheat Overlay Modal -->
+  <div class="cheat-modal" id="cheat-modal">
+    <div class="cheat-content">
+      <img id="cheat-img" class="cheat-img" alt="Anti-Cheat Marine" />
+      <div class="cheat-text-jp">バカなインチキ野郎！</div>
+      <div class="cheat-text-sub">(You are a dumb cheater! +1 Mistake Added)</div>
+      <button class="cheat-close-btn" onclick="closeCheatModal()">I'm Sorry Marine...</button>
+    </div>
+  </div>
+
+  <!-- Left Sidebar Toggle Button -->
+  <button class="sidebar-toggle-btn" onclick="toggleSidebar()">Mistakes List</button>
+
+  <!-- Right BG Toggle Button -->
+  <button class="bg-toggle-btn" onclick="toggleBgPopover()">⚓ Customization</button>
+
+  <!-- Left Sidebar Panel -->
+  <div class="sidebar-panel" id="sidebar-panel">
+    <div class="panel-header">
+      <h2>Mistake Log</h2>
+      <button class="close-btn" onclick="toggleSidebar()">✕</button>
+    </div>
+    <button class="practice-mistakes-btn" onclick="enableMistakesOnlyMode()">Practice Mistakes Only</button>
+    <div class="mistakes-list" id="mistakes-list"></div>
+  </div>
+
+  <!-- Right Compact Background & Clicker Image Panel -->
+  <div class="bg-popover" id="bg-popover">
+    <div class="panel-header">
+      <h2>Custom Background</h2>
+      <button class="close-btn" onclick="toggleBgPopover()">✕</button>
+    </div>
+    <input type="text" class="bg-input" id="bg-url-input" placeholder="Paste image URL here..." />
+    <button class="file-label" onclick="applyUrlBg()">Apply URL</button>
+    <label class="file-label">
+      Upload File
+      <input type="file" id="bg-file-input" accept="image/*" style="display: none;" onchange="applyFileBg(event)" />
+    </label>
+    <button class="file-label" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5;" onclick="clearBg()">Reset BG</button>
+
+    <div class="panel-header" style="margin-top: 10px;">
+      <h2>Clicker Image</h2>
+    </div>
+    <input type="text" class="bg-input" id="clicker-url-input" placeholder="Paste Mari image URL..." />
+    <button class="file-label" onclick="applyUrlClickerImg()">Apply URL</button>
+    <label class="file-label">
+      Upload File
+      <input type="file" id="clicker-file-input" accept="image/*" style="display: none;" onchange="applyFileClickerImg(event)" />
+    </label>
+    <button class="file-label" style="background: rgba(239, 68, 68, 0.2); border-color: #ef4444; color: #fca5a5;" onclick="resetClickerImg()">Reset Image</button>
+  </div>
+
+  <div class="app-container">
+    <div class="header">
+      <h1>🏴‍☠️ Houshou Marine SRS 🏴‍☠️</h1>
+      <div class="sub-header">Ahoy! Repeat items based on mistake frequency</div>
+    </div>
+
+    <div class="mode-selector">
+      <button class="mode-btn active" id="btn-mode-jp-en" onclick="setMode('jp-en')">Japanese → English</button>
+      <button class="mode-btn" id="btn-mode-en-jp" onclick="setMode('en-jp')">English → Japanese</button>
+    </div>
+
+    <div class="prompt-box">
+      <div class="prompt-title" id="prompt-title">Japanese Prompt</div>
+      <div class="prompt-text" id="prompt-text">Loading...</div>
+      <div class="card-meta" id="card-meta">Times Wrong: 0</div>
+    </div>
+
+    <div class="input-section" id="input-section">
+      <input type="text" id="user-answer" placeholder="Type your answer here..." autocomplete="off" />
+      <button class="submit-btn" id="submit-btn" onclick="checkAnswer()">Submit Answer</button>
+    </div>
+
+    <div class="feedback-box" id="feedback-box">
+      <div id="feedback-text"></div>
+      <div id="correct-answer-display" style="font-weight: bold;"></div>
+      <button class="next-btn" onclick="proceedToNextCard()">Next Card ➔</button>
+    </div>
+
+    <div class="stats-footer">
+      <span id="due-count">Due Cards: 0</span>
+      <span id="total-count">Total Deck: 93</span>
+    </div>
+  </div>
+
+  <!-- Bottom Houshou Marine Clicker Bar -->
+  <div class="clicker-bar">
+    <div class="clicker-left">
+      <img 
+        src="https://images.goodsmile.info/cms/images/product/20210708/11494/87820/large/d5c4ba5e1d51a66e409945a0b730fef6.jpg" 
+        class="marine-click-target" 
+        id="marine-clicker-target" 
+        alt="Marine Clicker"
+        onclick="clickMarine(event)"
+      />
+      <div class="clicker-info">
+        <div class="mari-balance" id="mari-balance">0 Mari</div>
+        <div class="mari-stats" id="mari-click-power">Per Click: 1</div>
+        <div class="mari-stats" id="mari-passive-power">Per Sec: 0</div>
+      </div>
+    </div>
+
+    <div class="store-container">
+      <div class="store-header-title">オークション (Shop Upgrades)</div>
+      <div class="clicker-shop" id="clicker-shop">
+        <!-- Shop upgrade items render dynamically here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const defaultClickerImg = "https://images.goodsmile.info/cms/images/product/20210708/11494/87820/large/d5c4ba5e1d51a66e409945a0b730fef6.jpg";
+    const marineCheatImgUrl = defaultClickerImg;
+
+    const vocabularyList = [
+      { id: 1, jp: "し / よん / shi / yon / 四", en: "four", answers: ["four", "4"] },
+      { id: 2, jp: "Amerika / アメリカ", en: "USA", answers: ["usa", "america", "united states"] },
+      { id: 3, jp: "amerikajin / アメリカじん / アメリカ人", en: "American person", answers: ["american person", "american"] },
+      { id: 4, jp: "Arigatou gozaimasu. / ありがとうございます。", en: "Thank you. (formal)", answers: ["thank you", "thank you (formal)", "thank you formal"] },
+      { id: 5, jp: "Arigatou! / ありがとう！", en: "Thank you. (informal)", answers: ["thank you", "thanks", "thank you (informal)", "thank you informal"] },
+      { id: 6, jp: "boku / ぼく / 僕", en: "I (mildly masculine)", answers: ["i", "i (mildly masculine)", "me"] },
+      { id: 7, jp: "Burajiru / ブラジル", en: "Brazil", answers: ["brazil"] },
+      { id: 8, jp: "chotto / ちょっと", en: "a little", answers: ["a little", "little"] },
+      { id: 9, jp: "Chuugoku / ちゅうごく / 中国", en: "China", answers: ["china"] },
+      { id: 10, jp: "chuugokujin / ちゅうごくじん / 中国人", en: "Chinese person", answers: ["chinese person", "chinese"] },
+      { id: 11, jp: "daigakusei / だいがくせい / 大学生", en: "university student", answers: ["university student", "college student"] },
+      { id: 12, jp: "Doitsu / ドイツ", en: "Germany", answers: ["germany"] },
+      { id: 13, jp: "doko / どこ", en: "where", answers: ["where"] },
+      { id: 14, jp: "dou / どう", en: "how", answers: ["how"] },
+      { id: 15, jp: "Doumo / どうも", en: "Thank you (the polite and short version)", answers: ["thank you", "thanks", "doumo"] },
+      { id: 16, jp: "Douzo / どうぞ", en: "here you go; please", answers: ["here you go", "please", "here you go; please"] },
+      { id: 17, jp: "Douzo yoroshiku. / どうぞよろしく。", en: "Pleased to meet you.", answers: ["pleased to meet you", "nice to meet you"] },
+      { id: 18, jp: "Furansu / フランス", en: "France", answers: ["france"] },
+      { id: 19, jp: "furansujin / フランスじん / フランス人", en: "French person", answers: ["french person", "french"] },
+      { id: 20, jp: "gakusei / がくせい / 学生", en: "student", answers: ["student"] },
+      { id: 21, jp: "hai / はい", en: "yes", answers: ["yes"] },
+      { id: 22, jp: "Hajimemashite. / はじめまして。", en: "Nice to meet you.", answers: ["nice to meet you", "pleased to meet you"] },
+      { id: 23, jp: "Hee / へえ", en: "Oh! (strong surprise and interest)", answers: ["oh", "oh!", "hee"] },
+      { id: 24, jp: "Igirisu / イギリス", en: "UK; England", answers: ["uk", "england", "uk; england"] },
+      { id: 25, jp: "igirisujin / イギリスじん / イギリス人", en: "English person", answers: ["english person", "british person", "english"] },
+      { id: 26, jp: "ii / いい", en: "good", answers: ["good"] },
+      { id: 27, jp: "ii desu ne. / いいですね。", en: "That's good, isn't it? / Sounds good.", answers: ["that's good, isn't it?", "sounds good", "that's good"] },
+      { id: 28, jp: "iie. / いいえ", en: "no", answers: ["no"] },
+      { id: 29, jp: "Irimasen. / いりません。", en: "I don't need it.", answers: ["i don't need it", "don't need it"] },
+      { id: 30, jp: "isha / いしゃ / 医者", en: "doctor", answers: ["doctor"] },
+      { id: 31, jp: "Jaa mata! / じゃあまた！", en: "See you later!", answers: ["see you later", "see you later!"] },
+      { id: 32, jp: "kaishain / かいしゃいん / 会社員", en: "company employee", answers: ["company employee", "office worker"] },
+      { id: 33, jp: "Konbanwa. / こんばんは。", en: "Good evening.", answers: ["good evening"] },
+      { id: 34, jp: "Konnichiwa / こんにちは", en: "Hello", answers: ["hello", "good afternoon"] },
+      { id: 35, jp: "koukousei / こうこうせい / 高校生", en: "a high school student", answers: ["a high school student", "high school student"] },
+      { id: 36, jp: "Mekishiko / メキシコ", en: "Mexico", answers: ["mexico"] },
+      { id: 37, jp: "Nihon / にほん / 日本", en: "Japan", answers: ["japan"] },
+      { id: 38, jp: "nihonjin / にほんじん / 日本人", en: "Japanese person", answers: ["japanese person", "japanese"] },
+      { id: 39, jp: "ocha / おちゃ / お茶", en: "tea", answers: ["tea", "green tea"] },
+      { id: 40, jp: "Ohayou gozaimasu. / おはようございます。", en: "Good morning. (formal)", answers: ["good morning", "good morning (formal)"] },
+      { id: 41, jp: "Ohayou. / おはよう。", en: "Good morning. (informal)", answers: ["good morning", "good morning (informal)"] },
+      { id: 42, jp: "oishii / おいしい / 美味しい", en: "tasty", answers: ["tasty", "delicious"] },
+      { id: 43, jp: "Onamae wa? / おなまえは？ / お名前は？", en: "What is your name?", answers: ["what is your name?", "what's your name?", "what is your name"] },
+      { id: 44, jp: "ore / おれ / 俺", en: "I (strongly masculine)", answers: ["i", "i (strongly masculine)", "me"] },
+      { id: 45, jp: "Sayounara / さようなら", en: "Goodbye", answers: ["goodbye", "bye"] },
+      { id: 46, jp: "sensei / せんせい / 先生", en: "teacher; professor", answers: ["teacher", "professor", "teacher; professor"] },
+      { id: 47, jp: "Shitsurei shimasu. / しつれいします。/ 失礼します。", en: "Goodbye; sorry. (formal)", answers: ["goodbye", "sorry", "excuse me", "goodbye; sorry. (formal)"] },
+      { id: 48, jp: "Sou desu ne. / そうですね。", en: "That's right; Let me think.", answers: ["that's right", "let me think", "that's right; let me think."] },
+      { id: 49, jp: "Sou desu. / そうです。", en: "That's right.", answers: ["that's right"] },
+      { id: 50, jp: "Sumimasen, chotto. / すみません、ちょっと。", en: "Sorry, it is a little (inconvenient for me).", answers: ["sorry, it is a little", "sorry", "sorry, it is a little (inconvenient for me)."] },
+      { id: 51, jp: "Sumimasen. / すみません。", en: "Sorry; excuse me.", answers: ["sorry", "excuse me", "sorry; excuse me."] },
+      { id: 52, jp: "watashi / わたし / 私", en: "I", answers: ["i", "me"] },
+      { id: 53, jp: "いち / ichi / 一", en: "one", answers: ["one", "1"] },
+      { id: 54, jp: "いちじ / ichiji / 一時", en: "1 o'clock", answers: ["1 o'clock", "1 o clock", "one o'clock"] },
+      { id: 55, jp: "いまなんじですか。/ Ima nanji desu ka. / 今何時ですか。", en: "What time is it now?", answers: ["what time is it now?", "what time is it"] },
+      { id: 56, jp: "えいご / eigo / 英語", en: "English language", answers: ["english language", "english"] },
+      { id: 57, jp: "きゅう / く / kyuu / ku / 九", en: "nine", answers: ["nine", "9"] },
+      { id: 58, jp: "きゅうじゅう / kyuujuu / 九十", en: "ninety", answers: ["ninety", "90"] },
+      { id: 59, jp: "くじ / kuji / 九時", en: "9 o'clock", answers: ["9 o'clock", "nine o'clock", "9 o clock"] },
+      { id: 60, jp: "ご / go / 五", en: "five", answers: ["five", "5"] },
+      { id: 61, jp: "ごごしちじ / gogo shichiji / 午後七時", en: "7 p.m.", answers: ["7 p.m.", "7 pm", "7p.m."] },
+      { id: 62, jp: "ごじ / goji / 五時", en: "5 o'clock", answers: ["5 o'clock", "five o'clock", "5 o clock"] },
+      { id: 63, jp: "ごじゅう / gojuu / 五十", en: "fifty", answers: ["fifty", "50"] },
+      { id: 64, jp: "ごぜんじゅうじはん / gozen juuji han / 午前十時半", en: "10:30 a.m.", answers: ["10:30 a.m.", "10:30 am", "10:30a.m."] },
+      { id: 65, jp: "ごぜんろくじ / gozen rokuji / 午前六時", en: "6 a.m.", answers: ["6 a.m.", "6 am", "6a.m."] },
+      { id: 66, jp: "さん / san / 三", en: "three", answers: ["three", "3"] },
+      { id: 67, jp: "さんじ / sanji / 三時", en: "3 o'clock", answers: ["3 o'clock", "three o'clock", "3 o clock"] },
+      { id: 68, jp: "さんじゅう / sanjuu / 三十", en: "thirty", answers: ["thirty", "30"] },
+      { id: 69, jp: "しち / なな / shichi / nana / 七", en: "seven", answers: ["seven", "7"] },
+      { id: 70, jp: "しちじ / shichiji / 七時", en: "7 o'clock", answers: ["7 o'clock", "seven o'clock", "7 o clock"] },
+      { id: 71, jp: "じゅう / juu / 十", en: "ten", answers: ["ten", "10"] },
+      { id: 72, jp: "じゅういち / juuichi / 十一", en: "eleven", answers: ["eleven", "11"] },
+      { id: 73, jp: "じゅういちじ / juuichiji / 十一時", en: "11 o'clock", answers: ["11 o'clock", "eleven o'clock", "11 o clock"] },
+      { id: 74, jp: "じゅうじ / juuji / 十時", en: "10 o'clock", answers: ["10 o'clock", "ten o'clock", "10 o clock"] },
+      { id: 75, jp: "じゅうに / juuni / 十二", en: "twelve", answers: ["twelve", "12"] },
+      { id: 76, jp: "じゅうにじ / juuniji / 十二時", en: "12 o'clock", answers: ["12 o'clock", "twelve o'clock", "12 o clock"] },
+      { id: 77, jp: "ちゅうごくご / chuugokugo / 中国語", en: "Chinese language", answers: ["chinese language", "chinese"] },
+      { id: 78, jp: "ともだち / tomodachi / 友達", en: "friend", answers: ["friend"] },
+      { id: 79, jp: "ななじゅう / nanajuu / 七十", en: "seventy", answers: ["seventy", "70"] },
+      { id: 80, jp: "なまえ / namae / 名前", en: "name", answers: ["name"] },
+      { id: 81, jp: "に / ni / 二", en: "two", answers: ["two", "2"] },
+      { id: 82, jp: "にじ / niji / 二時", en: "2 o'clock", answers: ["2 o'clock", "two o'clock", "2 o clock"] },
+      { id: 83, jp: "にじゅう / nijuu / 二十", en: "twenty", answers: ["twenty", "20"] },
+      { id: 84, jp: "にほんご / nihongo / 日本語", en: "Japanese language", answers: ["japanese language", "japanese"] },
+      { id: 85, jp: "はち / hachi / 八", en: "eight", answers: ["eight", "8"] },
+      { id: 86, jp: "はちじ / hachiji / 八時", en: "8 o'clock", answers: ["8 o'clock", "eight o'clock", "8 o clock"] },
+      { id: 87, jp: "はちじゅう / hachijuu / 八十", en: "eighty", answers: ["eighty", "80"] },
+      { id: 88, jp: "ひゃく / hyaku / 百", en: "one hundred", answers: ["one hundred", "hundred", "100"] },
+      { id: 89, jp: "よじ / yoji / 四時", en: "4 o'clock", answers: ["4 o'clock", "four o'clock", "4 o clock"] },
+      { id: 90, jp: "よんじゅう / yonjuu / 四十", en: "forty", answers: ["forty", "40"] },
+      { id: 91, jp: "ろく / roku / 六", en: "six", answers: ["six", "6"] },
+      { id: 92, jp: "ろくじ / rokuji / 六時", en: "6 o'clock", answers: ["6 o'clock", "six o'clock", "6 o clock"] },
+      { id: 93, jp: "わたしの / watashi no / 私の", en: "my", answers: ["my"] }
+    ];
+
+    let currentMode = 'jp-en';
+    let srsData = {};
+    let currentCard = null;
+    let mistakesOnlyMode = false;
+
+    // Clicker Game State
+    let mari = 0;
+    let clickPower = 1;
+    let passivePower = 0;
+    let autoClickRate = 0;
+
+    const upgrades = [
+      { id: 'hat', name: 'Pirate Hat', cost: 15, clickAdd: 1, passiveAdd: 0, autoClickAdd: 0, level: 0 },
+      { id: 'autoclicker', name: 'Ahoy Bot (Auto Clicker)', cost: 30, clickAdd: 0, passiveAdd: 0, autoClickAdd: 1, level: 0 },
+      { id: 'compass', name: 'Cap\'n\'s Compass', cost: 50, clickAdd: 0, passiveAdd: 2, autoClickAdd: 0, level: 0 },
+      { id: 'fan', name: 'Sensu Fan', cost: 120, clickAdd: 3, passiveAdd: 0, autoClickAdd: 0, level: 0 },
+      { id: 'map', name: 'Treasure Map', cost: 250, clickAdd: 5, passiveAdd: 0, autoClickAdd: 0, level: 0 },
+      { id: 'ship', name: 'Galleon Ship', cost: 600, clickAdd: 0, passiveAdd: 12, autoClickAdd: 0, level: 0 },
+      { id: 'chest', name: 'Treasure Chest', cost: 1500, clickAdd: 15, passiveAdd: 0, autoClickAdd: 0, level: 0 },
+      { id: 'bot_upgrade', name: 'Super Ahoy Bot', cost: 3000, clickAdd: 0, passiveAdd: 0, autoClickAdd: 5, level: 0 },
+      { id: 'captain', name: 'Pirate Captain', cost: 8000, clickAdd: 0, passiveAdd: 80, autoClickAdd: 0, level: 0 },
+      { id: 'vault', name: 'Marine\'s Vault', cost: 20000, clickAdd: 100, passiveAdd: 200, autoClickAdd: 0, level: 0 },
+      { id: 'anthem', name: 'Ahoy Anthem!', cost: 75000, clickAdd: 500, passiveAdd: 1000, autoClickAdd: 10, level: 0 }
+    ];
+
+    window.onload = function() {
+      document.getElementById('cheat-img').src = marineCheatImgUrl;
+
+      const savedBg = localStorage.getItem('marine_app_bg');
+      if (savedBg) {
+        document.body.style.backgroundImage = `url('${savedBg}')`;
+      }
+
+      const savedClickerImg = localStorage.getItem('marine_clicker_custom_img');
+      if (savedClickerImg) {
+        document.getElementById('marine-clicker-target').src = savedClickerImg;
+      }
+
+      const savedSrs = localStorage.getItem('marine_error_srs_data');
+      if (savedSrs) {
+        srsData = JSON.parse(savedSrs);
+      } else {
+        initSrsData();
+      }
+
+      const savedClicker = localStorage.getItem('marine_clicker_data');
+      if (savedClicker) {
+        const cData = JSON.parse(savedClicker);
+        mari = cData.mari || 0;
+        clickPower = cData.clickPower || 1;
+        passivePower = cData.passivePower || 0;
+        autoClickRate = cData.autoClickRate || 0;
+        if (cData.upgrades) {
+          cData.upgrades.forEach((u, i) => {
+            if (upgrades[i]) {
+              upgrades[i].level = u.level;
+              upgrades[i].cost = u.cost;
+            }
+          });
+        }
+      }
+
+      renderMistakesList();
+      renderShop();
+      updateClickerUI();
+      loadNextCard();
+
+      // Passive Mari & Auto-Clicker Interval
+      setInterval(() => {
+        let earned = 0;
+        if (passivePower > 0) {
+          earned += passivePower;
+        }
+        if (autoClickRate > 0) {
+          earned += (autoClickRate * clickPower);
+          triggerAutoClickEffect();
+        }
+
+        if (earned > 0) {
+          mari += earned;
+          updateClickerUI();
+          saveClickerData();
+        }
+      }, 1000);
+
+      const userInput = document.getElementById('user-answer');
+      userInput.addEventListener('paste', function(e) {
+        e.preventDefault();
+        userInput.value = '';
+
+        if (currentCard) {
+          const cardState = srsData[currentCard.id] || { wrongCount: 0, dueDate: 0 };
+          cardState.wrongCount += 1;
+          cardState.dueDate = Date.now() + (60 * 1000);
+          srsData[currentCard.id] = cardState;
+          saveSrsData();
+
+          document.getElementById('card-meta').textContent = `Times Wrong: ${cardState.wrongCount}`;
+        }
+
+        document.getElementById('cheat-modal').style.display = 'flex';
+      });
+
+      userInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          if (document.getElementById('input-section').style.display !== 'none') {
+            checkAnswer();
+          } else {
+            proceedToNextCard();
+          }
+        }
+      });
+    };
+
+    function closeCheatModal() {
+      document.getElementById('cheat-modal').style.display = 'none';
+      document.getElementById('user-answer').focus();
+    }
+
+    function initSrsData() {
+      vocabularyList.forEach(item => {
+        srsData[item.id] = { dueDate: Date.now(), wrongCount: 0 };
+      });
+      saveSrsData();
+    }
+
+    function saveSrsData() {
+      localStorage.setItem('marine_error_srs_data', JSON.stringify(srsData));
+      renderMistakesList();
+    }
+
+    function saveClickerData() {
+      const cData = {
+        mari,
+        clickPower,
+        passivePower,
+        autoClickRate,
+        upgrades: upgrades.map(u => ({ level: u.level, cost: u.cost }))
+      };
+      localStorage.setItem('marine_clicker_data', JSON.stringify(cData));
+    }
+
+    function toggleSidebar() {
+      document.getElementById('sidebar-panel').classList.toggle('open');
+      document.getElementById('bg-popover').classList.remove('open');
+    }
+
+    function toggleBgPopover() {
+      document.getElementById('bg-popover').classList.toggle('open');
+      document.getElementById('sidebar-panel').classList.remove('open');
+    }
+
+    function renderMistakesList() {
+      const container = document.getElementById('mistakes-list');
+      container.innerHTML = '';
+
+      const mistakeItems = vocabularyList
+        .filter(item => (srsData[item.id]?.wrongCount || 0) > 0)
+        .sort((a, b) => (srsData[b.id]?.wrongCount || 0) - (srsData[a.id]?.wrongCount || 0));
+
+      if (mistakeItems.length === 0) {
+        container.innerHTML = '<div style="color: #94a3b8; text-align: center; margin-top: 20px;">No mistakes recorded yet! Good job!</div>';
+        return;
+      }
+
+      mistakeItems.forEach(item => {
+        const count = srsData[item.id].wrongCount;
+        const el = document.createElement('div');
+        el.className = 'mistake-item';
+        el.innerHTML = `
+          <div class="mistake-item-details">
+            <span class="mistake-jp">${item.jp}</span>
+            <span class="mistake-en">${item.en}</span>
+          </div>
+          <span class="mistake-badge">${count}x</span>
+        `;
+        container.appendChild(el);
+      });
+    }
+
+    function applyUrlBg() {
+      const url = document.getElementById('bg-url-input').value.trim();
+      if (url) {
+        document.body.style.backgroundImage = `url('${url}')`;
+        localStorage.setItem('marine_app_bg', url);
+      }
+    }
+
+    function applyFileBg(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const res = evt.target.result;
+          document.body.style.backgroundImage = `url('${res}')`;
+          localStorage.setItem('marine_app_bg', res);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function clearBg() {
+      document.body.style.backgroundImage = 'none';
+      localStorage.removeItem('marine_app_bg');
+    }
+
+    function applyUrlClickerImg() {
+      const url = document.getElementById('clicker-url-input').value.trim();
+      if (url) {
+        document.getElementById('marine-clicker-target').src = url;
+        localStorage.setItem('marine_clicker_custom_img', url);
+      }
+    }
+
+    function applyFileClickerImg(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const res = evt.target.result;
+          document.getElementById('marine-clicker-target').src = res;
+          localStorage.setItem('marine_clicker_custom_img', res);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function resetClickerImg() {
+      document.getElementById('marine-clicker-target').src = defaultClickerImg;
+      localStorage.removeItem('marine_clicker_custom_img');
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('btn-mode-jp-en').classList.toggle('active', mode === 'jp-en');
+      document.getElementById('btn-mode-en-jp').classList.toggle('active', mode === 'en-jp');
+      document.getElementById('prompt-title').textContent = mode === 'jp-en' ? 'Japanese Prompt' : 'English Prompt';
+      loadNextCard();
+    }
+
+    function enableMistakesOnlyMode() {
+      mistakesOnlyMode = true;
+      toggleSidebar();
+      loadNextCard();
+    }
+
+    function loadNextCard() {
+      document.getElementById('user-answer').value = '';
+      document.getElementById('input-section').style.display = 'flex';
+      document.getElementById('feedback-box').style.display = 'none';
+
+      let pool = vocabularyList;
+      if (mistakesOnlyMode) {
+        pool = vocabularyList.filter(item => (srsData[item.id]?.wrongCount || 0) > 0);
+        if (pool.length === 0) {
+          alert("No mistakes found! Reverting to all cards mode.");
+          mistakesOnlyMode = false;
+          pool = vocabularyList;
+        }
+      }
+
+      const weighted = [];
+      pool.forEach(item => {
+        const wrong = srsData[item.id]?.wrongCount || 0;
+        const weight = 1 + wrong * 3;
+        for (let i = 0; i < weight; i++) {
+          weighted.push(item);
+        }
+      });
+
+      currentCard = weighted[Math.floor(Math.random() * weighted.length)];
+
+      if (currentMode === 'jp-en') {
+        document.getElementById('prompt-text').textContent = currentCard.jp;
+      } else {
+        document.getElementById('prompt-text').textContent = currentCard.en;
+      }
+
+      const wrongCount = srsData[currentCard.id]?.wrongCount || 0;
+      document.getElementById('card-meta').textContent = `Times Wrong: ${wrongCount}`;
+
+      updateStatsFooter();
+      document.getElementById('user-answer').focus();
+    }
+
+    function checkAnswer() {
+      const input = document.getElementById('user-answer').value.trim().toLowerCase();
+      if (!input) return;
+
+      const isCorrect = currentMode === 'jp-en' 
+        ? currentCard.answers.some(ans => input === ans.toLowerCase())
+        : input === currentCard.jp.toLowerCase() || currentCard.answers.some(ans => input === ans.toLowerCase());
+
+      const feedbackBox = document.getElementById('feedback-box');
+      const feedbackText = document.getElementById('feedback-text');
+      const correctAnswerDisplay = document.getElementById('correct-answer-display');
+
+      document.getElementById('input-section').style.display = 'none';
+      feedbackBox.style.display = 'flex';
+
+      if (isCorrect) {
+        feedbackBox.className = 'feedback-box correct';
+        feedbackText.textContent = 'Correct! Great job!';
+        correctAnswerDisplay.textContent = '';
+        
+        mari += 5;
+        updateClickerUI();
+        saveClickerData();
+      } else {
+        feedbackBox.className = 'feedback-box incorrect';
+        feedbackText.textContent = 'Incorrect!';
+        correctAnswerDisplay.textContent = `Correct answer: ${currentCard.answers.join(' / ')}`;
+
+        const cardState = srsData[currentCard.id] || { wrongCount: 0, dueDate: 0 };
+        cardState.wrongCount += 1;
+        srsData[currentCard.id] = cardState;
+        saveSrsData();
+      }
+    }
+
+    function proceedToNextCard() {
+      loadNextCard();
+    }
+
+    function updateStatsFooter() {
+      const total = vocabularyList.length;
+      const mistakesCount = vocabularyList.filter(i => (srsData[i.id]?.wrongCount || 0) > 0).length;
+      document.getElementById('due-count').textContent = `Mistakes Logged: ${mistakesCount}`;
+      document.getElementById('total-count').textContent = `Total Deck: ${total}`;
+    }
+
+    /* Clicker Functionality */
+    function clickMarine(e) {
+      mari += clickPower;
+      updateClickerUI();
+      saveClickerData();
+
+      const floatEl = document.createElement('div');
+      floatEl.className = 'floating-text';
+      floatEl.textContent = `+${clickPower} Mari`;
+      
+      const x = e ? e.clientX : (window.innerWidth / 2);
+      const y = e ? e.clientY : (window.innerHeight - 80);
+
+      floatEl.style.left = `${x - 20}px`;
+      floatEl.style.top = `${y - 20}px`;
+      
+      document.body.appendChild(floatEl);
+
+      setTimeout(() => {
+        floatEl.remove();
+      }, 800);
+    }
+
+    function triggerAutoClickEffect() {
+      const target = document.getElementById('marine-clicker-target');
+      if (target) {
+        target.style.transform = 'scale(0.95)';
+        setTimeout(() => target.style.transform = 'none', 100);
+      }
+    }
+
+    function renderShop() {
+      const shopContainer = document.getElementById('clicker-shop');
+      shopContainer.innerHTML = '';
+
+      upgrades.forEach((u, index) => {
+        const item = document.createElement('div');
+        item.className = `shop-item ${mari < u.cost ? 'disabled' : ''}`;
+        item.onclick = () => buyUpgrade(index);
+
+        let effectText = '';
+        if (u.clickAdd > 0) effectText += `+${u.clickAdd}/click `;
+        if (u.passiveAdd > 0) effectText += `+${u.passiveAdd}/sec `;
+        if (u.autoClickAdd > 0) effectText += `+${u.autoClickAdd} auto-click/s`;
+
+        item.innerHTML = `
+          <div class="shop-title">${u.name} (Lvl ${u.level})</div>
+          <div class="shop-effect">${effectText.trim()}</div>
+          <div class="shop-cost">${u.cost} Mari</div>
+        `;
+
+        shopContainer.appendChild(item);
+      });
+    }
+
+    function buyUpgrade(index) {
+      const u = upgrades[index];
+      if (mari >= u.cost) {
+        mari -= u.cost;
+        u.level += 1;
+        clickPower += u.clickAdd;
+        passivePower += u.passiveAdd;
+        autoClickRate += u.autoClickAdd;
+        u.cost = Math.floor(u.cost * 1.5);
+
+        renderShop();
+        updateClickerUI();
+        saveClickerData();
+      }
+    }
+
+    function updateClickerUI() {
+      document.getElementById('mari-balance').textContent = `${mari} Mari`;
+      document.getElementById('mari-click-power').textContent = `Per Click: ${clickPower}`;
+      document.getElementById('mari-passive-power').textContent = `Per Sec: ${passivePower + (autoClickRate * clickPower)} (AutoClicks: ${autoClickRate}/s)`;
+
+      renderShop();
+    }
+  </script>
+</body>
+</html>
